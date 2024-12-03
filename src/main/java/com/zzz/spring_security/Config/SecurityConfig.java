@@ -4,11 +4,11 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.provisioning.InMemoryUserDetailsManager;
+import org.springframework.security.crypto.factory.PasswordEncoderFactories;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+
+import javax.sql.DataSource;
 
 /*
  1. we put "/error" in permitted requests, to make error accessible by anyone.
@@ -22,32 +22,24 @@ public class SecurityConfig {
         return http
                 .authorizeHttpRequests(request -> request
                         .requestMatchers("/hello1", "/hello2").authenticated()
-                        .requestMatchers("/hello3", "/hello4", "/error").permitAll())
+                        .requestMatchers("/hello3", "/hello4", "/error", "/register").permitAll())
                 .formLogin(Customizer.withDefaults())
                 .httpBasic(Customizer.withDefaults())
                 .csrf(csrf -> csrf.disable())
                 .build();
     }
 
+    /*
+    I add this bean because in "AuthController" class hey say I can't
+    autowired PasswordEncoder as no bean of its type. You may say but
+    there is passwordEncoder where It used in login operation. You alright
+    but the Authentication provider creates an instance of it locally it is
+    not a bean, he create an instance of one of implementations of "PasswordEncode"
+    then assign it to a variable of "PasswordEncode" and use it. we will make same as
+    Authentication provider but make this setup as a bean to can use by other components
+    */
     @Bean
-    public UserDetailsService userDetailsService() {
-        UserDetails user1 = User.builder()
-                .username("mohsen")
-                .password("{noop}748295")
-                .roles("user")
-                .build();
-
-        UserDetails user2 = User.builder()
-                .username("ahmed")
-                .password("{noop}12345")
-                .roles("user", "admin")
-                .build();
-
-        UserDetails user3 = User.builder()
-                .username("amr")
-                .password("{noop}54321")
-                .roles("user", "admin", "manager")
-                .build();
-        return new InMemoryUserDetailsManager(user1, user2, user3);
+    public PasswordEncoder passwordEncoder() {
+        return PasswordEncoderFactories.createDelegatingPasswordEncoder();
     }
 }
