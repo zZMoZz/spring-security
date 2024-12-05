@@ -37,50 +37,71 @@ public class SecurityConfig {
     }
 
     /*
-    1. Of course, we use "DelegatingPasswordEncoder" because it is the best one.
-    2. NOTE: don't make multiple beans of the same object as this, because spring will conflict, which one to choose.
-    3. if we run the app, spring will conflict.
-    4. I do that only for explain concepts.
+    1. We use "DelegatingPasswordEncoder" in all examples because it is the best approach.
+    2. NOTE: don't create multiple beans of the same object as we do here, because spring will get conflict, which one to choose!
+    -------> if we run the app, spring will conflict.
+    -------> I do that only for write all code cases without comment them.
     */
 
-    // case 1 :
+    // Example 1 :
+    // this creates "DelegatingPasswordEncoder" supports a lot of password encoders.
+    // ------> with "bcrypt" as for encoding process.
     // this configuration is used by authentication provider by default in login process.
-    // but to can same configuration in spring component, you must create a bean of password encoder.
-    // without it, if you try to inject passwordEncoder to any class, an error occur.
+    // but to can use "PasswordEncoder" spring components, you must create a bean of it.
+    // without this, if you try to inject passwordEncoder to any spring component, an error occur.
     @Bean
     public PasswordEncoder passwordEncoder1() {
         return PasswordEncoderFactories.createDelegatingPasswordEncoder();
     }
 
-    // case 2 :
-    // You want to use "DelegatingPasswordEncoder" with your own configuration
+    // Example 2 :
+    // We were used "pbkdf2" and want to upgrade to "bcrypt". => so use "bcrypt" for encoding.
+    // Notice, there some users their password still stored as plain text and without prefixies.
+    //   --> So, in this case we must declare a default encoder that handle passwords without prefixies.
     @Bean
     public PasswordEncoder passwordEncoder2() {
-        // define a map to hold encoders and associated prefix.
-        Map<String, PasswordEncoder> encoderMap = new HashMap<>();
+         // define a map to hold encoders and associated prefix.
+        Map<String, PasswordEncoder> encoders = new HashMap<>();
 
-        // Add encoders to map
-        encoderMap.put("bcrypt", new BCryptPasswordEncoder());
-        encoderMap.put("scrypt", SCryptPasswordEncoder.defaultsForSpringSecurity_v5_8());
-        encoderMap.put("noop", NoOpPasswordEncoder.getInstance());
+         // Add encoders to map
+        encoders.put("bcrypt", new BCryptPasswordEncoder());
+        encoders.put("pbkdf2", Pbkdf2PasswordEncoder.defaultsForSpringSecurity_v5_8());
 
-        // Return, with make "bcrypt" as the default
-        return new DelegatingPasswordEncoder("bcrypt", encoderMap);
+        // Create instance of DelegatingPasswordEncoder to can edit before return
+        DelegatingPasswordEncoder delegatingPwdEncoder = new DelegatingPasswordEncoder("bcrypt", encoders);
+
+        // specify a default encoder to handle that without prefix
+        delegatingPwdEncoder.setDefaultPasswordEncoderForMatches(NoOpPasswordEncoder.getInstance());
+
+        // Return, with use "bcrpyt" for encoding operation
+        return delegatingPwdEncoder;
     }
+ 
+    // Example 3 :
+     // You want to use "DelegatingPasswordEncoder" with your own configuration.
 
-    // case 3 :
-    // You want to use default "DelegatingPasswordEncoder" but in same time configure bcrypt.
-    // Note: You can't modify the map, If you want so use above way.
+    // If you want to tune "BCryptPasswordEncoder", you can't use "createDelegatingPasswordEncoder()".
+    // --> Because you can't modify map list of encoders or even override it.
+    // So, it is better to create "DelegatingPasswordEncoder" with your own configuration.
+         /* 
+        ==================================================================================
+        !!!!! NOTE: these properties are applied to new passwords during registration. it doesn't mean thing 
+        for matching process, because salt, strength, and version already extracts from stored hashed password.
+        So don't warry it will not affect the passwords that were stored using old configuration.
+        ==================================================================================
+        */
     @Bean
-    public PasswordEncoder passwordEncoder3() {
-        DelegatingPasswordEncoder delegatingPasswordEncoder = (DelegatingPasswordEncoder)
-                PasswordEncoderFactories.createDelegatingPasswordEncoder();
+    public PasswordEncoder passwordEncoder2() {
+         // define a map to hold encoders and associated prefix.
+        Map<String, PasswordEncoder> encodersMap = new HashMap<>();
 
-        BCryptPasswordEncoder bCryptPasswordEncoder = new BCryptPasswordEncoder(BCryptPasswordEncoder.BCryptVersion.$2A, 20);
-        delegatingPasswordEncoder.setDefaultPasswordEncoderForMatches(bCryptPasswordEncoder);
-        
-        return  delegatingPasswordEncoder;
+         // Add encoders to the map
+        encodersMap.put("bcrypt", new BCryptPasswordEncoder(BCryptPasswordEncoder.BCryptVersion.$2A, 20));
+        // add what you want .... 
+
+        // Return, with use "bcrpyt" for encoding operation
+        return new DelegatingPasswordEncoder("bcrypt", encodersMap);
     }
-
 }
+
 
