@@ -1,0 +1,6 @@
+package com.zzz.spring_security.exception;
+
+import org.springframework.security.web.authentication.www.BasicAuthenticationEntryPoint;
+
+public class CustomBasicAuthenticationEntryPoint extends BasicAuthenticationEntryPoint {
+}

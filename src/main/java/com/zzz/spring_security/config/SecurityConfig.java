@@ -1,5 +1,7 @@
-package com.zzz.spring_security.Config;
+package com.zzz.spring_security.config;
 
+import com.zzz.spring_security.exception.CustomAccessDeniedHandler;
+import com.zzz.spring_security.exception.CustomAuthenticationEntryPoint;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.Customizer;
@@ -22,8 +24,11 @@ public class SecurityConfig {
                         .requestMatchers("/hello1", "/hello2").authenticated()
                         .requestMatchers("/hello3", "/hello4", "/error", "/register").permitAll())
                 .formLogin(Customizer.withDefaults())
-                .httpBasic(Customizer.withDefaults())
+                .httpBasic(hbc -> hbc
+                        .authenticationEntryPoint(new CustomAuthenticationEntryPoint()))
                 .csrf(csrf -> csrf.disable())
+                .exceptionHandling(ehc -> ehc
+                        .accessDeniedHandler(new CustomAccessDeniedHandler()))
                 .build();
     }
 

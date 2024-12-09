@@ -1,4 +1,4 @@
-package com.zzz.spring_security.Config;
+package com.zzz.spring_security.config;
 
 import com.zzz.spring_security.model.Account;
 import com.zzz.spring_security.repository.AccountRepo;

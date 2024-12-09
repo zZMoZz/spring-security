@@ -1,4 +1,4 @@
-package com.zzz.spring_security.Config;
+package com.zzz.spring_security.config;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Profile;
@@ -13,22 +13,29 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 @Component
-@Profile("!prod")
+@Profile("prod")
 @RequiredArgsConstructor
-public class UserPwdAuthenticationProvider implements AuthenticationProvider {
+public class UserPwdProdAuthenticationProvider implements AuthenticationProvider {
+    private final PasswordEncoder passwordEncoder;
     private final UserDetailsService userDetailsService;
 
     @Override
     public Authentication authenticate(Authentication authentication) throws AuthenticationException {
-        // fetch username & password
+        // fetch username & password that entered by user
         String username = authentication.getName();
-        String pwd = authentication.getCredentials().toString();
+        String rawPwd = authentication.getCredentials().toString();
 
-        // Load user details to get roles and make sure that is it a validate username
+
+        // fetch user details from database using username
         UserDetails userDetails = userDetailsService.loadUserByUsername(username);
 
-        // If in this "profile" the pwd doesn't important, you can remove fetching logic of it and return fixed pwd like "123".
-         return new UsernamePasswordAuthenticationToken(username, pwd, userDetails.getAuthorities());
+        // validate entered password with hashed password
+        String hashPwd = userDetails.getPassword();
+        if (passwordEncoder.matches(rawPwd, hashPwd))
+            // we don't return only "authentication" again, to add roles.
+            return new UsernamePasswordAuthenticationToken(username, rawPwd, userDetails.getAuthorities());
+        else
+            throw new BadCredentialsException("Invalid password");
     }
 
     @Override
