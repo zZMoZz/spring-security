@@ -3,6 +3,8 @@ package com.zzz.spring_security.model;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.Set;
+
 @Entity
 @Table(name = "account")
 @Getter @Setter
@@ -20,6 +22,9 @@ public class Account {
     @Column(name = "pwd")
     private String pwd;
 
-    @Column(name = "role")
-    private String role;
+    @OneToMany(mappedBy = "account", fetch = FetchType.EAGER)
+    private Set<Authority> authorities;
+
+    // If frontend team don't want to handle authorities
+    // You can use "@JsonIgnore" with this attribute.
 }

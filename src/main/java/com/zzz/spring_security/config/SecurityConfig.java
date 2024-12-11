@@ -4,8 +4,10 @@ import com.zzz.spring_security.exception.CustomAccessDeniedHandler;
 import com.zzz.spring_security.exception.CustomAuthenticationEntryPoint;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.core.GrantedAuthorityDefaults;
 import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
@@ -21,8 +23,9 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
                 .authorizeHttpRequests(request -> request
-                        .requestMatchers("/hello1", "/hello2").authenticated()
-                        .requestMatchers("/hello3", "/hello4", "/error", "/register").permitAll())
+                        .requestMatchers("/hello1", "/hello2").hasAnyRole("USER", "ADMIN")
+                        .requestMatchers("/hello3").hasRole("ADMIN")
+                        .requestMatchers("/hello4", "/error", "/register").permitAll())
                 .formLogin(Customizer.withDefaults())
                 .httpBasic(hbc -> hbc
                         .authenticationEntryPoint(new CustomAuthenticationEntryPoint()))
@@ -41,3 +44,5 @@ public class SecurityConfig {
         return PasswordEncoderFactories.createDelegatingPasswordEncoder();
     }
 }
+
+
