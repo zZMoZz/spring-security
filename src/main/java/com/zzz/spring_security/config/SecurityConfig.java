@@ -2,6 +2,7 @@ package com.zzz.spring_security.config;
 
 import com.zzz.spring_security.exception.CustomAccessDeniedHandler;
 import com.zzz.spring_security.exception.CustomAuthenticationEntryPoint;
+import com.zzz.spring_security.filter.emailValidationFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -11,6 +12,8 @@ import org.springframework.security.config.core.GrantedAuthorityDefaults;
 import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.AuthenticationFilter;
+import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 
 /*
  1. we put "/error" in permitted requests, to make error accessible by anyone.
@@ -22,6 +25,7 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
+                .addFilterBefore(new emailValidationFilter(), BasicAuthenticationFilter.class)
                 .authorizeHttpRequests(request -> request
                         .requestMatchers("/hello1", "/hello2").hasAnyRole("USER", "ADMIN")
                         .requestMatchers("/hello3").hasRole("ADMIN")
